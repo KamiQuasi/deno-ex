@@ -53,14 +53,13 @@ router
     <html>
     <body>
     <div id="editor">${post}</div>
-    <script src="https://cdn.ckeditor.com/ckeditor5/27.0.0/classic/ckeditor.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@ckeditor/ckeditor5-autosave@27.0.0/build/autosave.js"></script>
+    <script type="module" src="/assets/scripts/ckeditor.js"></script>
     <script>
     let editor;
     function saveData(data) {
       fetch()
     }
-    ClassicEditor
+    InlineEditor
       .create(document.querySelector('#editor'),{
         plugins: [Autosave],
         autosave: {
@@ -95,14 +94,17 @@ router
     <body>
     ${post}
     <div><a href="/post/edit/${ctx.params.post}">EDIT</a></div>
-    <script src="https://cdn.ckeditor.com/ckeditor5/27.0.0/classic/ckeditor.js"></script>
     </body>
     </html>`;
   })
   .get("/assets/scripts/:path+", async ctx => {
     const fileName = `./assets/scripts/${ctx.params['path']}`;
-    ctx.response.type = 'application/javascript';
+    ctx.response.headers = new Headers();
+    ctx.response.headers.set('Content-Type','application/javascript');
     if (scriptCache.has(fileName)) {
+      ctx.response.body = scriptCache.get(fileName);
+    } else if (exists(fileName)) {
+      scriptCache.set(fileName,await Deno.readTextFile(fileName));
       ctx.response.body = scriptCache.get(fileName);
     } else if (await exists(fileName.replace('.js','.ts'))) {
       const { files, diagnostics } = await Deno.emit(fileName.replace('.js','.ts'), {
