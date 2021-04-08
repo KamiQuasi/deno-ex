@@ -1,5 +1,8 @@
 import { Application, Router, HttpError, Status, send } from "https://deno.land/x/oak/mod.ts";
+import { exists } from "https://deno.land/std@0.92.0/fs/mod.ts";
 
+const port = Deno.env.get('PORT') || Deno.env.get('OPENSHIFT_DENO_PORT') || 8080;
+const ip = Deno.env.get('IP') || Deno.env.get('OPENSHIFT_DENO_IP') || '0.0.0.0';
 const app = new Application();
 const router = new Router();
 const scriptCache = new Map<string,string>();
@@ -29,7 +32,72 @@ app.use(async (context, next) => {
 router
   .get("/", ctx=> {
     ctx.response.type = 'text/html; charset=utf-8';
-    ctx.response.body = `<!doctype html><html><body>Deno Example</body></html>`;
+    ctx.response.body = `<!doctype html>
+    <html>
+      <body>
+        <h1>Deno Example</h1>
+        <sample-wc>With Web Component</sample-wc>
+        <script src="/assets/scripts/example.js"></script>
+      </body>
+    </html>`;
+  })
+  .get("/post", ctx => {
+    ctx.response.type = 'text/html; charset=utf-8';
+    ctx.response.body = `<!doctype html><html><body><ul></ul></body></html>`
+  })
+  .get("/post/edit/:post", async ctx => {
+    const post = await Deno.readTextFile(`./posts/${ctx.params.post}.html`);
+    console.log('EDIT POST:',ctx.params.post, post);
+    ctx.response.type = 'text/html; charset=utf-8';
+    ctx.response.body = `<!doctype html>
+    <html>
+    <body>
+    <div id="editor">${post}</div>
+    <script src="https://cdn.ckeditor.com/ckeditor5/27.0.0/classic/ckeditor.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@ckeditor/ckeditor5-autosave@27.0.0/build/autosave.js"></script>
+    <script>
+    let editor;
+    function saveData(data) {
+      fetch()
+    }
+    ClassicEditor
+      .create(document.querySelector('#editor'),{
+        plugins: [Autosave],
+        autosave: {
+          save (editor) {
+            return saveData( editor.getData());
+          }
+        }
+      })
+      .then(newEditor=> {editor=newEditor;})
+      .catch(error=>{console.error(error);});
+    </script>
+    </body>
+    </html>`;
+  })
+  .post("/post/:post", async ctx=> {
+    if (ctx.request.hasBody) {
+      const {value:postBody} = await ctx.request.body();
+      const data:string = typeof postBody !== 'undefined' ? postBody.toString() : '';
+      const post = await Deno.writeTextFile(`./posts/${ctx.params.post}.html`,data);
+      ctx.response.status = 201;
+      ctx.response.body = {
+        success: true,
+        data: data
+      }
+    }
+  })
+  .get("/post/:post", async ctx => {
+    const post = await Deno.readTextFile(`./posts/${ctx.params.post}.html`);
+    console.log('READ POST:',ctx.params.post, post);
+    ctx.response.body = `<!doctype html>
+    <html>
+    <body>
+    ${post}
+    <div><a href="/post/edit/${ctx.params.post}">EDIT</a></div>
+    <script src="https://cdn.ckeditor.com/ckeditor5/27.0.0/classic/ckeditor.js"></script>
+    </body>
+    </html>`;
   })
   .get("/assets/scripts/:path+", async ctx => {
     const fileName = `./assets/scripts/${ctx.params['path']}`;
