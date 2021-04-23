@@ -92,14 +92,8 @@
               "from": {
                 "kind": "ImageStreamTag",
                 "namespace": "${NAMESPACE}",
-                "name": "nodejs:${NODEJS_VERSION}"
-              },
-              "env":  [
-                {
-                    "name": "NPM_MIRROR",
-                    "value": "${NPM_MIRROR}"
-                }
-              ]
+                "name": "deno-ex:${DENO_VERSION}"
+              }
             }
           },
           "output": {
@@ -153,7 +147,7 @@
               "imageChangeParams": {
                 "automatic": true,
                 "containerNames": [
-                  "nodejs-example"
+                  "deno-example"
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
@@ -179,7 +173,7 @@
             "spec": {
               "containers": [
                 {
-                  "name": "nodejs-example",
+                  "name": "deno-example",
                   "image": " ",
                   "ports": [
                     {
@@ -222,7 +216,7 @@
         "displayName": "Name",
         "description": "The name assigned to all of the frontend objects defined in this template.",
         "required": true,
-        "value": "nodejs-example"
+        "value": "deno-example"
       },
       {
         "name": "NAMESPACE",
@@ -232,10 +226,10 @@
         "value": "openshift"
       },
       {
-        "name": "NODEJS_VERSION",
-        "displayName": "Version of NodeJS Image",
-        "description": "Version of NodeJS image to be used (10, 12, or latest).",
-        "value": "12",
+        "name": "DENO_VERSION",
+        "displayName": "Version of Deno Image",
+        "description": "Version of Deno image to be used (1.9.0, 1.9.1, or latest).",
+        "value": "1.9.0",
         "required": true
       },
       {
@@ -250,7 +244,7 @@
         "displayName": "Git Repository URL",
         "description": "The URL of the repository with your application source code.",
         "required": true,
-        "value": "https://github.com/sclorg/nodejs-ex.git"
+        "value": "https://github.com/KamiQuasi/deno-ex.git"
       },
       {
         "name": "SOURCE_REPOSITORY_REF",
@@ -265,7 +259,7 @@
       {
         "name": "APPLICATION_DOMAIN",
         "displayName": "Application Hostname",
-        "description": "The exposed hostname that will route to the Node.js service, if left blank a value will be defaulted.",
+        "description": "The exposed hostname that will route to the Deno service, if left blank a value will be defaulted.",
         "value": ""
       },
       {
@@ -281,12 +275,6 @@
         "description": "A secret string used to configure the Generic webhook.",
         "generate": "expression",
         "from": "[a-zA-Z0-9]{40}"
-      },
-      {
-        "name": "NPM_MIRROR",
-        "displayName": "Custom NPM Mirror URL",
-        "description": "The custom NPM mirror URL",
-        "value": ""
       }
     ]
   }
